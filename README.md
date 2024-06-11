@@ -8,7 +8,7 @@ nadiampaquin@gmail.com
 
 ## Description
 
-The Applied Data Science Program at Syracuse University’s School of Information features a wide range of courses that provide students with a comprehensive instruction of how data can be used to inform decision making. Courses in this program are well-rounded for the needs of a data scientist, drawing upon various areas of studies: computer science, statistics, social sciences, management, and law to teach topics such as data management, statistical analysis, machine learning, research design, and cybersecurity. Ultimately, students are enabled to acquire, explore, analyze, manage, and visualize large data sets using the latest technologies to provide data-driven insights to any kind of problem. 
+The Applied Data Science Program at Syracuse University’s School of Information features a wide range of courses that provide students with comprehensive instruction on how data can inform decision-making. Courses in this program are well-rounded for the needs of a data scientist, drawing upon various areas of studies: computer science, statistics, social sciences, management, machine learning, research design, cybersecurity, and more. Ultimately, students are enabled to acquire, explore, analyze, manage, and visualize large data sets using the latest technologies to provide data-driven insights into any kind of problem. 
 
 The learning outcomes as described on the program’s official website go as follows:
 - Collect, store, and access data by identifying and leveraging applicable technologies.
