@@ -1,0 +1,227 @@
+---
+title: "finalproject_IST687"
+author: "Nadia Paquin"
+date: "2023-03-15"
+output: pdf_document
+---
+# Introduction  
+Chronic kidney disease is a common diabetic complication that is characterized by slow, irreversible loss of kidney function. Because of its irreversible nature, diagnosing CKD as early as possible is critical in preventing further loss of function and potentially severe outcomes. Current medicinal practice uses GFR, or glomerular filtration rates, as a metric to diagnose CKD. Once GFR levels are at the critical point needed for a diagnosis however, the patient has already experienced a loss of kidney function. Thus, there is room for further research on different metrics we can use to predict and diagnose the onset of CKD at earlier stages.  
+In this study, I hope to use a data set published by the University of Irvine to investigate a long list of other variables. This data set has 25 metrics (see Appendix for full list) for 400 patients with and without CKD. I hope to identify variables with strong associations to CKD and create a model which can be used for diagnoses.  
+  
+# Methods  
+1. Clean the data, convert categorical data to binary, fill in NA values  
+2. Perform simple visualizations using base packages
+3. Identify which variables are of interest with a correlation matrix  
+4. Perform predictive analysis (regression, decision tree)  
+
+# Results and Conclusions  
+  
+Because my data has 25 variables, I ran a correlation matrix in order to see which variables had the highest correlation with CKD presence. From my matrix I found 8 variables to have correlation coefficients greater than 0.5 (positive and negative): sugar, albumin, red blood cells (categorical), hemoglobin, packed cell volume, red blood cell count, hypertension, and diabetes mellitus. I used these eight variables to build my models.   
+  
+I conducted a linear regression first, using all variables with high correlation to predict the presence of CKD. The results yield a model with an adjusted R square value of 0.77, and F score F(8,391)= 167.8 (p<2.2e-16). These are both suggestive of a robust model. Looking at each individual predictor, all are p<0.005 with the exception of x. With largely significant predictors and an overall strong model, I have a pretty solid predictive analysis of CKD onset. 
+  
+In order to check for multicollinearity between my predictors, I used the vif() function which yields the variance inflation factor (VIF) for each coefficient. The VIF is a statistical tool used with regression modeling to measure how much the variance of a regression coefficient is affected by collinearity. When VIF=1, no collinearity is present. VIF>10, collinearity is high. In my analysis, I saw VIFs around 1-2, with the exception of 'hemo' and 'pcv' at around 5. This suggests that there is minimal collinearity between most of our variables and minimal amounts between hemo and pcv. Because my variables don't seem to be affecting each other too heavily, I continued on to the next analysis.  
+  
+Next, I created a decision tree (see code for visualization). Here, I split my data in two parts - 60% of my data goes towards my training set and 40% goes towards my testing set. This Rpart decision tree yielded a reported accuracy of 0.96 in the results. When tested on my tested set, it yielded an accuracy of 0.97, with sensitivity of 0.97 and specificity of 0.97. Overall this is a more robust predictive model to diagnose CKD.  
+  
+
+# R-code and Analysis:   
+  
+## Setting up  
+
+```{r, message=FALSE}
+#Loading libraries
+library(tidyverse)
+library(imputeTS)
+library(car)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(zoo)
+library(ggplot2)
+
+```
+  
+If I had an older version of R, I would use the Kaggle library to load my data:
+```{r, eval = FALSE}
+# Install the kaggle package (if not already installed)
+install.packages("kaggle")
+
+# Load the kaggle package
+library(kaggle)
+
+# Download the ckdisease dataset
+kaggle_datasets_download("mansoordaku/ckdisease")
+```
+
+Since R 4.2.1 is incompatible with Kaggle at the moment, I'll just download the CSV and load it from a local source. This file was downloaded in CSV format from Kaggle at https://www.kaggle.com/datasets/mansoordaku/ckdisease?resource=download made available by UCI's dataset archive.
+```{r}
+#Loading my data. 
+raw <- data.frame(read.csv('kidney_disease.csv'))
+```
+
+Let's check out the struture of the raw data:
+```{r}
+str(raw)
+```
+Our data frame is 400x25 (plus a surrogate ID key). 11 of the columns are numerical, while 14 are character strings. 
+
+
+## Cleaning
+
+There are a couple things we can fix right away:  
+- There are three columns labeled as 'chr' but really should be numerical. Among these are: 'pcv', 'wc', 'rc'.   
+- There are empty strings in many columns when they should be NA instead.   
+  
+Let's get rid of empty strings and replace them with NAs. We'll also replace '\t?' with NAs (these show up in columns pcv, wc, and rc). 
+```{r}
+raw[raw == ""] <- NA
+raw[raw == "\t?"] <- NA
+```
+
+We'll also get rid of any non-numeric data entries. Some entries have letters and symbols, so we'll use gsub to take them out and leave just the numbers.
+```{r}
+raw$pcv <- gsub("[^0-9]+", "", raw$pcv)
+raw$rc <- gsub("[^0-9]+", "", raw$rc)
+raw$wc <- gsub("[^0-9]+", "", raw$wc)
+raw$classification <- gsub("ckd\t", "ckd", raw$classification)
+raw$dm <-  gsub("\t", "", raw$dm)
+raw$dm <- gsub(" ", "", raw$dm)
+raw$cad <- gsub("\t", "", raw$cad)
+```
+
+Let's convert these character columns to numeric
+```{r}
+raw$pcv <- as.numeric(raw$pcv)
+raw$rc <- as.numeric(raw$rc)
+raw$wc <- as.numeric(raw$wc)
+```
+
+Let's convert the character factors to binary 0 and 1s
+```{r}
+numerical <- raw %>% mutate(rbcnum = ifelse(is.na(rbc)==TRUE, NA, ifelse(rbc=='normal',0,1))) %>% 
+  mutate(pcnum = ifelse(is.na(pc)==TRUE, NA, ifelse(pc=='normal',0,1))) %>% 
+  mutate(pccnum = ifelse(is.na(pcc)==TRUE, NA, ifelse(pcc=='notpresent',0,1))) %>%
+  mutate(banum = ifelse(is.na(ba)==TRUE, NA, ifelse(ba=='notpresent',0,1))) %>%
+  mutate(htnnum = ifelse(is.na(htn)==TRUE, NA, ifelse(htn=='no',0,1))) %>%
+  mutate(dmnum = ifelse(is.na(dm)==TRUE, NA, ifelse(dm=='no',0,1))) %>%
+  mutate(cadnum = ifelse(is.na(cad)==TRUE, NA, ifelse(cad=='no',0,1))) %>%
+  mutate(anenum = ifelse(is.na(ane)==TRUE, NA, ifelse(ane=='no',0,1))) %>%
+  mutate(penum = ifelse(is.na(pe)==TRUE, NA, ifelse(pe=='no',0,1))) %>%
+  mutate(appetnum = ifelse(is.na(appet)==TRUE, NA, ifelse(appet=='good',0,1))) %>%
+  mutate(classification_num = ifelse(is.na(classification)==TRUE, NA, ifelse(classification=='notckd',0,1))) %>% 
+  select(id, age, bp, sg, al, su, rbcnum, pcnum, pccnum, banum, bgr, bu, sc, sod, pot, hemo, pcv, wc, rc, htnnum, dmnum, cadnum, appetnum, penum, anenum, classification_num)
+```
+
+For the purposes of this project we are going to fill in all of our NA values
+```{r}
+interpolated <- data.frame(apply(numerical, 2, function(x) na_interpolation(x)))
+```
+
+Let's peak at the new structure to see if everything is going as planned:
+```{r}
+str(interpolated)
+```
+
+## Simple Visuaizations
+
+An example of quick graphs I made to visualize parts of the data.
+```{r}
+hist(interpolated$age)
+```
+```{r}
+table(interpolated$classification_num, interpolated$dmnum)
+```
+```{r}
+boxplot(interpolated$hemo~interpolated$classification_num)
+```
+
+## Correlations, linear model, decision tree
+
+Finding which variables will be most promising to make a prediction model out of.
+```{r}
+correlation <- data.frame(cor(interpolated))
+correlation %>% select(classification_num) %>% filter(abs(classification_num)>0.5)
+```
+
+Making a subset of the interpolated numerical data with just the variables that yield a correlation of >|0.5|.
+```{r}
+subset1 <- interpolated %>% select(sg, al, rbcnum, hemo, pcv, rc, htnnum, dmnum, classification_num)
+subset2 <- interpolated %>% select(sg, al, hemo, pcv, rc, classification_num) #same as subset 1 but lacks binary data
+```
+
+Just to take a quick look at the relationship between all of our notable variables. Here we see some patterns that are likely a product of the na.approx method I used while generating data. 
+```{r}
+pairs(subset2)
+```
+
+Basic linear model using all variables
+```{r}
+fullmodel <- lm(classification_num ~ .,  data=subset1)
+summary(fullmodel)
+```
+
+Checking collinearity between variables. 
+```{r}
+vif(fullmodel)
+```
+
+Building training and testing subsets for an rpart model
+```{r}
+trainList <- createDataPartition(y=subset1$classification_num, p=0.6, list=FALSE)
+trainset <- subset1[trainList,]
+testset <- subset1[-trainList,]
+```
+
+Building a decision tree with caret
+```{r}
+tree <- train(classification_num ~., data=trainset, method='rpart')
+tree
+```
+
+Visualising the decision tree
+```{r}
+prp(tree$finalModel)
+```
+```{r}
+predictValues <- predict(tree, newdata=testset)
+predictValues <- factor(round(predictValues, digits=1))
+
+testset$classification_num <- factor(testset$classification_num)
+
+confusion <- confusionMatrix(predictValues, testset$classification_num)
+confusion
+```
+
+
+# Appendix  
+
+Variables:  
+			age		-	age	 
+			bp		-	blood pressure  
+			sg		-	specific gravity  
+			al		-   	albumin  
+			su		-	sugar  
+			rbc		-	red blood cells  
+			pc		-	pus cell  
+			pcc		-	pus cell clumps  
+			ba		-	bacteria  
+			bgr		-	blood glucose random  
+			bu		-	blood urea  
+			sc		-	serum creatinine  
+			sod		-	sodium  
+			pot		-	potassium  
+			hemo		-	hemoglobin  
+			pcv		-	packed cell volume  
+			wc		-	white blood cell count  
+			rc		-	red blood cell count  
+			htn		-	hypertension  
+			dm		-	diabetes mellitus  
+			cad		-	coronary artery disease  
+			appet		-	appetite  
+			pe		-	pedal edema  
+			ane		-	anemia  
+			class		-	class	  
+
+
+
