@@ -1,0 +1,142 @@
+---
+title: "ist707_project_dataset"
+author: "Nadia Paquin"
+date: "2023-05-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(rpart)
+library(ggplot2)
+library(reshape2)
+library(stats)
+library(caret)
+library(randomForest)
+library(e1071)
+```
+
+```{r}
+training <- read.csv('/Users/nadiapaquin/Desktop/syracuse/IST707/archive/Training.csv')
+training$prognosis <- as.factor(training$prognosis)
+#training[sapply(training, is.numeric)] <- lapply(training[sapply(training, is.numeric)], as.factor)
+training <- select(training, -X)
+```
+
+```{r}
+unique(training$prognosis)
+```
+
+```{r}
+dengue <- training[training$prognosis=='Dengue',] %>% select(-prognosis)
+dengue$index <- row.names(dengue)
+```
+
+```{r}
+denguecols <- colnames(dengue)
+dengue_long <- pivot_longer(dengue, cols=denguecols[1:132], names_to="symptoms", values_to= "presence")
+ggplot(dengue_long, aes(x = index, y = symptoms, fill = presence)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") 
+```
+
+```{r}
+hypothyroidism <- training[training$prognosis=='Hypothyroidism',] %>% select(-prognosis)
+hypothyroidism$index <- row.names(hypothyroidism)
+```
+
+```{r}
+hypocols <- colnames(hypothyroidism)
+hypo_long <- pivot_longer(hypothyroidism, cols=hypocols[1:132], names_to="symptoms", values_to= "presence")
+hypoplot <- ggplot(hypo_long, aes(x = symptoms, y = index, fill = presence)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") 
+plotly::ggplotly(hypoplot, tooltip = "text")
+```
+
+
+```{r}
+counts <- training %>% group_by(prognosis) %>% summarise(across(everything(), ~sum(.)))
+counts_long <- melt(counts, id.vars = "prognosis")
+counts_long
+```
+
+```{r}
+countsplot <- ggplot(counts_long, aes(x =variable, y = prognosis, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10))
+countsplot
+```
+```{r}
+testing <- read.csv('/Users/nadiapaquin/Desktop/syracuse/IST707/archive/Testing.csv')
+testing$prognosis <- as.factor(testing$prognosis)
+```
+
+```{r}
+x_train <- training %>% select(-prognosis)
+y_train <- training %>% select(prognosis)
+x_test <- testing %>% select(-pronosis)
+y_test <- testing %>% select(prognosis)
+```
+
+```{r}
+set.seed(123)
+encoding <- as.numeric(training$prognosis)
+#training$prognosis <- encoding
+encoding
+```
+
+```{r}
+model_rpart <- rpart(prognosis~., data=training, control = list(method="cv", k=100))
+predict_rp <- predict(model_rpart, newdata = testing, type="class")
+accuracy_rp <- sum(predict_rp == testing$prognosis) / nrow(testing)
+print(paste("The overall accuracy is:", accuracy_rp))
+```
+
+```{r}
+var_imp <- varImp(model_rpart)
+var_imp2 <- var_imp %>% arrange(desc(Overall))
+var_imp2 <- var_imp2 %>% filter(Overall >0)
+var_imp2 <- rownames(var_imp2)
+```
+
+```{r}
+nb = naiveBayes(prognosis~., data = training[, c(var_imp2, "prognosis")],laplace = 1, na.action=na.pass)
+pred_nb = predict(nb, newdata = testing, type = "class")
+accuracy_nb = mean(pred_nb == testing$prognosis)
+print(paste("The Naive Bayes overall accuracy is:", accuracy_nb))
+```
+
+```{r}
+train_control_rf <- trainControl(method="cv", number=50)
+model_rf <- randomForest(prognosis ~ ., data=training[, c(var_imp2, "prognosis")], mtry=sqrt(63), ntree=100, trControl=train_control_rf)
+predict_rf <- predict(model_rf, testing)
+accuracy_rf = mean(predict_rf == testing$prognosis)
+print(paste("The Random Forest overall accuracy is:", accuracy_rf))
+varImpPlot(model_rf)
+```
+
+```{r}
+train_control_knn <- trainControl(method = "cv", number = 10, search = "grid")
+model_knn <- train(prognosis ~ ., data = training, method = "knn",
+trControl = train_control_knn,
+tuneGrid = expand.grid(k = c(1, 3, 5)),
+metric = "Accuracy",
+preProcess = c("center", "scale"))
+predict_knn <- predict(model_knn, testing)
+accuracy_knn <- mean(predict_knn==testing$prognosis)
+print(paste("The KNN overall accuracy is:", accuracy_knn))
+print(model_knn)
+```
+
+
+
