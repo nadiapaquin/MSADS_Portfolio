@@ -25,12 +25,12 @@ This document is a means of showcasing projects completed with the program outco
 1. README.md 
     - Overview Document detailing repository contents
   
-2. IST718 Big Data Analytics
+2. [IST718 Big Data Analytics](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/IST718_BigDataAnalytics)
     - Project PDF: Differentiating acute myeloid leukemia (AML) and acute lymphoblastic leukemia (ALL) in patients using only their genetic expression data.
     - Data
     - Python notebook
   
-3. IST664 Natural Language Processing
+3. [IST664 Natural Language Processing](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/IST664_NaturalLanguageProcessing)
     - Project PDF: Spam email detection.
     - Data
     - Python script
@@ -40,20 +40,18 @@ This document is a means of showcasing projects completed with the program outco
     - Data
     - R markdown file
       
-5. IST659 Database Administration Concepts and Database Management
+5. [IST659 Database Administration Concepts and Database Management](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/IST659_DatabaseAdministration)
     - Project PDF: Creating an inventory database.
     - Tables and data SQL script
     - Procedures, views, functions SQL script
       
-6. Other
-    - IST687 Introduction to Data Science
+6. [Other](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/Other)
+    - [IST687 Introduction to Data Science](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/Other/IST687_IntroDataScience)
         - Project PDF
         - Data
         - R markdown file
-    - IST719 Information Visualization
-        -  Poster
 
-7. Portfolio Milestone
+7. [Portfolio Milestone](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/PortfolioMilestone)
     - Written Paper
     - Presentation Slides
     - Video Presentation
