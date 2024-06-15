@@ -25,4 +25,37 @@ This document is a means of showcasing projects completed with the program outco
 1. README.md 
     - Overview Document detailing repository contents
   
-2. IST
+2. IST718 Big Data Analytics
+    - Project PDF: Differentiating acute myeloid leukemia (AML) and acute lymphoblastic leukemia (ALL) in patients using only their genetic expression data.
+    - Data
+    - Python notebook
+  
+3. IST664 Natural Language Processing
+    - Project PDF: Spam email detection.
+    - Data
+    - Python script
+  
+4. IST707 Applied Machine Learning
+    - Project PDF: Diagnosing patients based on symptoms.
+    - Data
+    - R markdown file
+      
+5. IST659 Database Administration Concepts and Database Management
+    - Project PDF: Creating an inventory database.
+    - Tables and data SQL script
+    - Procedures, views, functions SQL script
+      
+6. Other
+    - IST687 Introduction to Data Science
+        - Project PDF
+        - Data
+        - R markdown file
+    - IST719 Information Visualization
+        -  Poster
+
+7. Portfolio Milestone
+    - Written Paper
+    - Presentation Slides
+    - Video Presentation
+    - Resume
+
