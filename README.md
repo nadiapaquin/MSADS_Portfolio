@@ -35,7 +35,7 @@ This document is a means of showcasing projects completed with the program outco
     - Data
     - Python script
   
-4. IST707 Applied Machine Learning
+4. [IST707 Applied Machine Learning](https://github.com/nadiapaquin/MSADS_Portfolio/tree/main/IST707_MachineLearning)
     - Project PDF: Diagnosing patients based on symptoms.
     - Data
     - R markdown file
